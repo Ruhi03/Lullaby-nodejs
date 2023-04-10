@@ -84,15 +84,17 @@ function createMessage(msg) {
 	const uesrInfo = document.createElement('div');
 	let msgElements;
 
-	uesrInfo.appendChild(name);
-	uesrInfo.appendChild(time);
-
 	uesrInfo.className = 'user';
 	name.className = 'name';
 	text.className = 'text';
 
 	if (msg.username === username) {
 		msgDiv.classList.add('my');
+		uesrInfo.appendChild(time);
+		uesrInfo.appendChild(name);
+	} else {
+		uesrInfo.appendChild(name);
+		uesrInfo.appendChild(time);
 	}
 
 	msgDiv.classList.add('msg');
@@ -133,6 +135,7 @@ socket.on('first load message', data => {
 socket.on('enter user', username => {
 	const msg = document.createElement('div');
 	msg.textContent = `${username}님이 입장하셨습니다.`;
+	msg.className = 'enter'
 	messages.appendChild(msg);
 	messages.scrollTo({
 		top: messages.scrollHeight,
