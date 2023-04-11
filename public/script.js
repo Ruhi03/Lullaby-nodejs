@@ -6,25 +6,24 @@ const form = document.querySelector('.form');
 const input = document.querySelector('.input');
 const fileBtn = document.querySelector('.file-btn');
 const fileInput = document.querySelector('.file-input');
+const fragment = document.createElement('div');
 
 let username;
 let count = 0;
 let maxCount = 100;
 
-const fragment = document.createElement('div');
+getNickname();
 
-socket.emit('load message', count);
-
-setTimeout(() => {
-	username = prompt('이름을 입력해주세요');
+async function getNickname() {
+	username = await prompt('이름을 입력해주세요');
 
 	if (username === null || username === '') {
 		username = '익명';
+
 	}
 
-	// 유저 입장 메시지
-	socket.emit('enter user', username);
-}, 200);
+	socket.emit('load message', count);
+};
 
 fileBtn.addEventListener('click', () => {
 	fileInput.click();
@@ -80,13 +79,8 @@ function createMessage(msg) {
 	const name = document.createElement('div');
 	const time = document.createElement('div');
 	const text = document.createElement('div');
-
 	const uesrInfo = document.createElement('div');
 	let msgElements;
-
-	uesrInfo.className = 'user';
-	name.className = 'name';
-	text.className = 'text';
 
 	if (msg.username === username) {
 		msgDiv.classList.add('my');
@@ -98,7 +92,10 @@ function createMessage(msg) {
 	}
 
 	msgDiv.classList.add('msg');
-
+	uesrInfo.className = 'user';
+	name.className = 'name';
+	text.className = 'text';
+	
 	if (count === 50) {
 		msgElements = document.querySelectorAll('.name');
 	} else {
@@ -107,9 +104,9 @@ function createMessage(msg) {
 
 	displayedNickname(msgElements);
 
-	name.textContent = msg.username;
-
 	const date = new Date(msg.createdAt);
+
+	name.textContent = msg.username;
 	time.textContent = date.toLocaleString();
 	text.textContent = msg.content;
 
@@ -129,7 +126,7 @@ socket.on('first load message', data => {
 	});
 
 	messages.scrollTo(0, messages.scrollHeight);
-	console.log('first load!');
+	socket.emit('enter user', username);
 });
 
 socket.on('enter user', username => {
