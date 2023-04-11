@@ -12,18 +12,13 @@ let username;
 let count = 0;
 let maxCount = 100;
 
-getNickname();
+username = prompt('이름을 입력해주세요');
 
-async function getNickname() {
-	username = await prompt('이름을 입력해주세요');
+if (username === null || username === '') {
+	username = '익명';
+}
 
-	if (username === null || username === '') {
-		username = '익명';
-
-	}
-
-	socket.emit('load message', count);
-};
+socket.emit('load message', count);
 
 fileBtn.addEventListener('click', () => {
 	fileInput.click();
