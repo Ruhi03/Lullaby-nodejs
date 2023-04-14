@@ -70,43 +70,55 @@ function createMessage(msg) {
 		}
 	}
 
+	function formatDate(date) {
+		const month = date.getMonth() + 1;
+		const day = date.getDate();
+		const year = date.getFullYear().toString().substr(-2);
+		const hours = date.getHours();
+		const minutes = date.getMinutes();
+		const amPM = hours < 12 ? '오전' : '오후';
+		const displayHours = hours % 12 || 12;
+
+		return `${month}월 ${day}일 ${amPM} ${displayHours}:${minutes.toString().padStart(2, '0') }`;
+	}
+
 	const msgDiv = document.createElement('div');
 	const name = document.createElement('div');
 	const time = document.createElement('div');
 	const text = document.createElement('div');
-	const uesrInfo = document.createElement('div');
+	const tooltip = document.createElement('span');
+	const div = document.createElement('div');
 	let msgElements;
+	
+	const date = new Date(msg.createdAt);
 
 	if (msg.username === username) {
-		msgDiv.classList.add('my');
-		uesrInfo.appendChild(time);
-		uesrInfo.appendChild(name);
+		msgDiv.classList.add('mymsg');
 	} else {
-		uesrInfo.appendChild(name);
-		uesrInfo.appendChild(time);
+		msgDiv.classList.add('msg');
 	}
 
-	msgDiv.classList.add('msg');
-	uesrInfo.className = 'user';
-	name.className = 'name';
-	text.className = 'text';
-	
 	if (count === 50) {
 		msgElements = document.querySelectorAll('.name');
 	} else {
 		msgElements = fragment.querySelectorAll('.name');
 	}
-
+	
 	displayedNickname(msgElements);
 
-	const date = new Date(msg.createdAt);
+	name.className = 'name';
+	text.className = 'text';
+	tooltip.className = 'tooltip';
 
 	name.textContent = msg.username;
-	time.textContent = date.toLocaleString();
 	text.textContent = msg.content;
+	tooltip.textContent = formatDate(date);
 
-	msgDiv.appendChild(uesrInfo);
-	msgDiv.appendChild(text);
+	div.appendChild(text);
+	div.appendChild(tooltip);
+	
+	msgDiv.appendChild(name);
+	msgDiv.appendChild(div);
 
 	return msgDiv;
 }
