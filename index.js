@@ -21,7 +21,7 @@ const messageSchema = new Schema({
 
 const Message = mongoose.model('Message', messageSchema);
 
-mongoose.connect('mongodb://127.0.0.1:27017/message')
+mongoose.connect('mongodb://ruhi03:ruhi03@127.0.0.1:27017/message?authSource=admin')
 	.then(() => {
 		console.log('Connected to MongoDB');
 	})
