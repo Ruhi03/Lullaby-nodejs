@@ -106,3 +106,5 @@ dist
 images/
 
 .DS_STORE
+
+/data

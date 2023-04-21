@@ -3,14 +3,21 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const {Server} = require('socket.io');
-const io = new Server(server);
 const mongoose = require('mongoose');
 const {Schema} = require('mongoose');
 const {v4: uuidv4} = require('uuid');
 const morgan = require('morgan');
+const cors = require('cors');
+
+const io = new Server(server, {
+	cors: {
+		origin: "*",
+	}
+});
 
 // 로그 콘솔창에 출력
 app.use(morgan('dev'));
+app.use(cors('*'));
 
 const messageSchema = new Schema({
 	username: String,
@@ -35,8 +42,15 @@ app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', socket => {
+io.on('connection', async socket => {
 	console.log('a user connected');
+
+	const totalMessage = await Message.countDocuments({});
+	socket.emit('maxOffset', totalMessage);
+
+	const data = await Message.find({}).sort({ createdAt: -1 }).limit(50);
+	socket.emit('first load message', { data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 50 })
+	
 
 	socket.on('disconnect', () => {
 		console.log('user disconnected');
@@ -53,21 +67,12 @@ io.on('connection', socket => {
 		io.emit('send message', msg);
 	});
 
-	socket.on('load message', async count => {
+	socket.on('load message', async (offset = 50) => {
+		const data = await Message.find({}).sort({createdAt: -1}).skip(offset).limit(50);
 		const totalMessage = await Message.countDocuments({});
-		let loadMessage;
-
-		if (count === 0) {
-			loadMessage = 'first load message';
-		} else {
-			loadMessage = 'load message';
-		}
-
-		if (totalMessage > count) {
-			const data = await Message.find({}).sort({createdAt: -1}).skip(count).limit(50);
-			socket.emit(loadMessage, {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 50});
-			socket.emit('max count update', totalMessage);
-		}
+		socket.emit('maxOffset', totalMessage);
+		socket.emit('load message', {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 50});
+		
 	});
 });
 
