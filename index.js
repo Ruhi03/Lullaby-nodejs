@@ -12,8 +12,6 @@ const cors = require('cors');
 // const GridFsStorage = require('multer-gridfs-storage');
 // const Grid = require('gridfs-stream');
 
-
-
 const io = new Server(server, {
 	cors: {
 		origin: "*",
@@ -23,7 +21,6 @@ const io = new Server(server, {
 // 로그 콘솔창에 출력
 app.use(morgan('dev'));
 app.use(cors('*'));
-app.use(express.static('public'));
 
 mongoose.connect('mongodb://ruhi03:ruhi03@127.0.0.1:27017/message?authSource=admin')
 	.then(() => {
@@ -72,8 +69,8 @@ const Message = mongoose.model('Message', messageSchema);
 
 io.on('connection', async socket => {
 	console.log('a user connected');
-	const data = await Message.find({}).sort({ createdAt: -1 }).limit(10);
-	socket.emit('first load message', { data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 10 })
+	const data = await Message.find({}).sort({ createdAt: -1 }).limit(30);
+	socket.emit('first load message', { data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 30 })
 	
 
 	socket.on('disconnect', () => {
@@ -92,8 +89,8 @@ io.on('connection', async socket => {
 	});
 
 	socket.on('load message', async (offset) => {
-		const data = await Message.find({}).sort({createdAt: -1}).skip(offset).limit(10);
-		socket.emit('load message', {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 10});
+		const data = await Message.find({}).sort({createdAt: -1}).skip(offset).limit(30);
+		socket.emit('load message', {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 30});
 		
 	});
 });
