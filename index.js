@@ -9,6 +9,11 @@ const {v4: uuidv4} = require('uuid');
 const morgan = require('morgan');
 const cors = require('cors');
 
+// const GridFsStorage = require('multer-gridfs-storage');
+// const Grid = require('gridfs-stream');
+
+
+
 const io = new Server(server, {
 	cors: {
 		origin: "*",
@@ -18,15 +23,7 @@ const io = new Server(server, {
 // 로그 콘솔창에 출력
 app.use(morgan('dev'));
 app.use(cors('*'));
-
-const messageSchema = new Schema({
-	username: String,
-	content: String,
-	createdAt: Date,
-	id: String,
-});
-
-const Message = mongoose.model('Message', messageSchema);
+app.use(express.static('public'));
 
 mongoose.connect('mongodb://ruhi03:ruhi03@127.0.0.1:27017/message?authSource=admin')
 	.then(() => {
@@ -36,20 +33,47 @@ mongoose.connect('mongodb://ruhi03:ruhi03@127.0.0.1:27017/message?authSource=adm
 		console.log(err);
 	});
 
-app.use(express.static('public'));
 
-app.get('/', (req, res) => {
-	res.sendFile(__dirname + '/index.html');
+
+// const conn = mongoose.connection;
+// let gfs;
+
+// conn.once('open', () => {
+// 	gfs = Grid(conn.db, mongoose.mongo);
+// 	gfs.collection('uploads'); // 파일 컬렉션 이름 설정
+// });
+
+// const storage = new GridFsStorage({
+// 	db: conn,
+// 	file: (req, file) => {
+// 		return {
+// 			filename: file.originalname
+// 		};
+// 	}
+// });
+
+// const upload = multer({ storage: storage }).single('file');
+
+// app.post('/upload', upload, (req, res) => {
+// 	res.json({ file: req.file });
+// });
+
+
+
+const messageSchema = new Schema({
+	username: String,
+	content: String,
+	filePath: [String],
+	createdAt: Date,
+	id: String,
 });
+
+const Message = mongoose.model('Message', messageSchema);
 
 io.on('connection', async socket => {
 	console.log('a user connected');
-
-	const totalMessage = await Message.countDocuments({});
-	socket.emit('maxOffset', totalMessage);
-
-	const data = await Message.find({}).sort({ createdAt: -1 }).limit(50);
-	socket.emit('first load message', { data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 50 })
+	const data = await Message.find({}).sort({ createdAt: -1 }).limit(10);
+	socket.emit('first load message', { data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 10 })
 	
 
 	socket.on('disconnect', () => {
@@ -67,11 +91,9 @@ io.on('connection', async socket => {
 		io.emit('send message', msg);
 	});
 
-	socket.on('load message', async (offset = 50) => {
-		const data = await Message.find({}).sort({createdAt: -1}).skip(offset).limit(50);
-		const totalMessage = await Message.countDocuments({});
-		socket.emit('maxOffset', totalMessage);
-		socket.emit('load message', {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 50});
+	socket.on('load message', async (offset) => {
+		const data = await Message.find({}).sort({createdAt: -1}).skip(offset).limit(10);
+		socket.emit('load message', {data: data.sort((i, j) => i.createdAt - j.createdAt), type: 'recent', count: 10});
 		
 	});
 });
